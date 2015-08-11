@@ -1,0 +1,209 @@
+from queue import *
+from array import array
+path = LifoQueue(maxsize = 0)
+realpath = []
+recpath = []
+class MickeyMove():
+    def __init__(self, map,x_start , y_start):
+        print("create mickey maze")
+        self.x_start = x_start
+        self.y_start = y_start
+        self.path = Queue(maxsize=0)
+        self.maze_map = map
+    
+    @classmethod
+    def checkMove(self, x_nextPos, y_nextPos):
+        maze = self.maze_map
+        ch_lis = []
+        N_x = x_nextPos+1
+        N_y = y_nextPos
+        N = []
+        N.append(N_x)
+        N.append(N_y)
+        S_x = x_nextPos-1
+        S_y = y_nextPos
+        S = []
+        S.append(S_x)
+        S.append(S_y)
+        E_x = x_nextPos
+        E_y = y_nextPos+1
+        E = []
+        E.append(E_x)
+        E.append(E_y)
+        W_x = x_nextPos
+        W_y = y_nextPos-1
+        W = []
+        W.append(W_x)
+        W.append(W_y)
+        if maze[x_nextPos+1][y_nextPos] == 0:
+            ch_lis.append(N)
+        if maze[x_nextPos-1][y_nextPos] == 0:
+            ch_lis.append(S)
+        if maze[x_nextPos][y_nextPos+1] == 0:
+            ch_lis.append(E)
+        if maze[x_nextPos][y_nextPos-1] == 0:
+            ch_lis.append(W)
+        return ch_lis
+
+    @classmethod
+    def checkDeadend(self,x_move,y_move):
+        maze = self.maze_map
+        dead_list = []
+        x_dead = x_move
+        y_dead = y_move
+        N = x_dead+1,y_dead
+        S = x_dead-1,y_dead
+        E = x_dead,y_dead+1
+        W = x_dead,y_dead-1
+        if maze[x_dead+1][y_dead] == 2:
+            dead_list.append(2)
+        if maze[x_dead-1][y_dead] == 2:
+            dead_list.append(2)
+        if maze[x_dead][y_dead+1] == 2:
+            dead_list.append(2)
+        if maze[x_dead][y_dead-1] == 2:
+            dead_list.append(2)
+        if dead_list.count(2) >= 3:
+            back = recpath[-1]
+            lastfork = back[1]
+            laststep = back[0]
+            print (back)
+            if len(back) == 2 :
+                print("1111",laststep[2][0],laststep[2][1])
+                self.move(laststep[2][0],laststep[2][1])
+            else:
+                print("2222",lastfork[0][0],lastfork[0][1])
+                self.move(lastfork[0][0],lastfork[0][1])
+
+    @classmethod
+    def getMaze(self,val):
+        self.maze_map = val
+    @classmethod
+    def getPath(self):
+        self.path = Queue(maxsize = 0)
+    @classmethod    
+    def getGo(self,x_move,y_move):
+        gogo = self.choose(x_move,y_move)
+        print(type(gogo))
+        return gogo
+
+    @classmethod
+    def move(self, x_move, y_move):
+        maze = self.maze_map
+        go = self.choose(x_move,y_move)
+        print("3.go:",go[0],go[1])
+        self.checkDeadend(go[0],go[1])
+        #print("go:",go)
+        self.recStep(x_move,y_move,go)
+        self.actStep(x_move, y_move)
+        print("\n")
+        self.move(go[0],go[1])
+
+    @classmethod
+    def recStep(self, x_recmovestep, y_recmovestep, go):
+        havegoyet = []
+        for i in range(0,len(recpath)):
+            havegoyet.append(recpath[i][0])
+            if [x_recmovestep, y_recmovestep] in havegoyet and [x_recmovestep, y_recmovestep] == recpath[i][0]:
+                gogo = recpath.pop()
+                allfork = gogo[1]
+                havemoved = [x_recmovestep,y_recmovestep]
+                allfork.remove(havemoved)
+                recpath.append(gogo)
+        array = []
+        recmove = [x_recmovestep,y_recmovestep]
+        array.append(recmove)
+        array.append(self.checkMove(x_recmovestep,y_recmovestep))
+        array.append(go)
+        allfork = array[1]
+        havemoved = array[2]
+        #print("array",array)
+        print("remove",havemoved)
+        if havemoved not in array[1] :
+            recpath.append(array)
+        else:
+            allfork.remove(havemoved)
+            recpath.append(array)
+        print ("4.rec",recpath)
+
+    @classmethod
+    def actStep(self,x_moved,y_moved):
+        paath = []
+        paath.append(x_moved)
+        paath.append(y_moved)
+        realpath.append(paath)
+        print("1.real",realpath)
+        return realpath
+
+    @classmethod
+    def goaway(self,list):
+        havegoyet = []
+        for i in range(0,len(recpath)):
+            havegoyet.append(recpath[i][0])
+            if list in havegoyet and list == recpath[i][0]:
+                return recpath[i]
+            else:
+                continue
+            
+    @classmethod
+    def choose(self,x_fork,y_fork):
+        ways = self.checkMove(x_fork,y_fork)
+        choosefork = self.random(ways)
+        if choosefork in realpath:
+            goaway = self.goaway(choosefork)
+            if len(goaway) == 2:
+                return goaway[1]
+            else:
+                return goaway[1][0]                                
+        else:
+            print("2.chofork:",choosefork)
+            return choosefork
+        
+    def setMaze(self,maze):
+        self.maze_map = maze
+        
+    @classmethod
+    def random(self,list):
+        from random import choice
+        return choice(list)
+    
+    @classmethod
+    def checkGoal(self,x_goal,y_goal):
+        maze = self.maze_map
+        x_Mazeboun = len(maze[0])
+        y_Mazeboun = len(maze)
+        if maze[x_goal][y_Mazeboun-1] == 0 or maze[x_goal][0] ==0 or maze[0][y_goal] == 0 or maze[x_Mazeboun-1][y_goal] == 0:
+            return True
+        else:
+            return False
+
+    @classmethod
+    def printMaze(self, maze_map):
+        print("in maze")
+        for row in maze_map:
+            for val in row:
+                print(val,end=" ")
+            print(end="\n")
+
+    
+def main():
+    maze =[ 
+           [2, 2, 2, 2, 2, 2, 2],
+           [2, 0, 0, 0, 0, 0, 2],
+           [2, 0, 2, 0, 2, 0, 2],
+           [2, 0, 0, 0, 0, 2, 2],
+           [2, 2, 0, 2, 0, 2, 2],
+           [2, 0, 0, 0, 0, 0, 0],
+           [2, 2, 2, 2, 2, 2, 2]]
+
+    m = MickeyMove(maze,1,1)
+    #print(m.maze_map)
+    #m.printMaze(m.maze_map)
+    m.getMaze(maze)
+    m.move(1,1)
+
+        
+if __name__ == "__main__":
+    Si = 1
+    Sj = 1
+    main()
